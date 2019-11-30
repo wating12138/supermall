@@ -1,6 +1,6 @@
 <template>
   <swiper ref="child">
-    <swiper-item v-for="item in banners" :key="item.link">
+    <swiper-item v-for="item in banners">
       <a :href="item.link">
         <img :src="item.image" alt="">
       </a>
@@ -20,7 +20,9 @@
     props: {
       banners: {
         type: Array,
-        default: []
+        default() {
+          return []
+        }
       }
     },
     updated() {
