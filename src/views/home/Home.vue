@@ -6,57 +6,21 @@
     <home-swiper :banners="banners"/>
     <recommend-view :recommends="recommends"/>
     <feature-view/>
-    <tab-control :text="['流行','新款','精选']" class="tab-control"/>
-    <p>1</p>
-    <p>2</p>
-    <p>3</p>
-    <p>4</p>
-    <p>5</p>
-    <p>6</p>
-    <p>7</p>
-    <p>8</p>
-    <p>9</p>
-    <p>10</p>
-    <p>11</p>
-    <p>12</p>
-    <p>13</p>
-    <p>14</p>
-    <p>15</p>
-    <p>16</p>
-    <p>17</p>
-    <p>18</p>
-    <p>19</p>
-    <p>20</p>
-    <p>21</p>
-    <p>22</p>
-    <p>23</p>
-    <p>24</p>
-    <p>25</p>
-    <p>26</p>
-    <p>27</p>
-    <p>28</p>
-    <p>29</p>
-    <p>30</p>
-    <p>31</p>
-    <p>32</p>
-    <p>33</p>
-    <p>34</p>
-    <p>35</p>
-    <p>36</p>
-    <p>37</p>
-    <p>38</p>
-    <p>39</p>
-    <p>40</p>
-    <p>41</p>
-    <p>42</p>
-    <p>43</p>
-    <p>44</p>
-    <p>45</p>
-    <p>46</p>
-    <p>47</p>
-    <p>48</p>
-    <p>49</p>
-    <p>50</p>
+    <tab-control :text="['流行','新款','精选']" class="tab-control" @tabClick="tabClick"/>
+    <goods-list :goods="showGoods"/>
+    <ul>
+      <li>1</li>
+      <li>2</li>
+      <li>3</li>
+      <li>4</li>
+      <li>5</li>
+      <li>6</li>
+      <li>7</li>
+      <li>8</li>
+      <li>9</li>
+      <li>10</li>
+    </ul>
+
   </div>
 </template>
 
@@ -66,8 +30,11 @@
   import RecommendView from "./childComps/RecommendView";
   import FeatureView from "./childComps/FeatureView";
   import TabControl from "../../components/content/tabcontrol/TabControl";
+  import GoodsList from "../../components/content/goods/GoodsList";
 
-  import {getHomeMultidata} from "network/home";
+
+  import {getHomeMultidata, getHomeGoods} from "network/home";
+
   export default {
     name: "Home",
     components: {
@@ -75,33 +42,81 @@
       HomeSwiper,
       RecommendView,
       FeatureView,
-      TabControl
+      TabControl,
+      GoodsList
     },
     data() {
       return {
         banners: [],
         dkeywords: [],
         keywords: [],
-        recommends: []
+        recommends: [],
+        goods: {
+          'pop': {page: 0, list: []},
+          'new': {page: 0, list: []},
+          'sell': {page: 0, list: []}
+        },
+        currentType: 'pop'
       }
     },
     created() {
-      getHomeMultidata().then(
-        res => {
-          console.log(res);
-          this.banners = res.data.banner.list;
-          this.dkeywords = res.data.dkeyword;
-          this.keywords = res.data.keyword;
-          this.recommends = res.data.recommend.list;
+      this.getHomeMultidataMethod();
+      this.getHomeGoodsMethod('pop');
+      this.getHomeGoodsMethod('new');
+      this.getHomeGoodsMethod('sell');
+    },
+    methods: {
+      /**
+       * 事件监听相关方法
+       **/
+      tabClick(index) {
+        switch (index) {
+          case 0:
+            this.currentType = 'pop';
+            break;
+          case 1:
+            this.currentType = 'new';
+            break;
+          case 2:
+            this.currentType = 'sell';
+            break;
+        }
+      },
+
+
+      /**
+       *网络请求相关方法
+       **/
+      getHomeMultidataMethod() {
+        getHomeMultidata().then(
+          res => {
+            this.banners = res.data.banner.list;
+            this.dkeywords = res.data.dkeyword;
+            this.keywords = res.data.keyword;
+            this.recommends = res.data.recommend.list;
+          })
+      },
+      getHomeGoodsMethod(type) {
+        const page = this.goods[type].page + 1;
+        getHomeGoods(type, page).then(res => {
+          this.goods[type].list.push(...res.data.list);
+          this.goods[type].page += 1;
         })
+      }
+    },
+    computed:{
+      showGoods(){
+        return this.goods[this.currentType].list;
+      }
     }
   }
 </script>
 
 <style scoped>
-  #home{
+  #home {
     padding-top: 44px;
   }
+
   .home-nav {
     background-color: var(--color-tint);
     color: #fff;
@@ -109,10 +124,12 @@
     top: 0;
     left: 0;
     right: 0;
-    z-index: 2;
+    z-index: 9;
   }
-  .tab-control{
+
+  .tab-control {
     position: sticky;
     top: 44px;
+    z-index: 9;
   }
 </style>
